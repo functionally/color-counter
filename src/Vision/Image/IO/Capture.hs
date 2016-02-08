@@ -1,4 +1,17 @@
+{-|
+Module      :  Vision.Image.IO.Capture
+Copyright   :  (c) 2016 Brian W Bush
+License     :  MIT
+Maintainer  :  Brian W Bush <consult@brianwbush.info>
+Stability   :  Stable
+Portability :  Portable
+
+Image capture.
+-}
+
+
 module Vision.Image.IO.Capture (
+-- * Input/output
   captureRGB
 ) where
 
@@ -13,7 +26,9 @@ import Vision.Primitive.Shape (ix2)
 import qualified Data.Vector.Storable as V (fromList)
 
 
-captureRGB :: FilePath -> IO RGB
+-- | Capture an image from a Video for Linux device.
+captureRGB :: FilePath -- ^ The device name.
+           -> IO RGB   -- ^ An action to capture one image frame.
 captureRGB deviceName =
   do
     withDevice deviceName $ \device -> do

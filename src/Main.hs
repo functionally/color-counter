@@ -1,8 +1,21 @@
+{-|
+Module      :  Main
+Copyright   :  (c) 2016 Brian W Bush
+License     :  MIT
+Maintainer  :  Brian W Bush <consult@brianwbush.info>
+Stability   :  Stable
+Portability :  Portable
+
+Main entry.
+-}
+
+
 {-# LANGUAGE DeriveDataTypeable  #-}
 {-# LANGUAGE RecordWildCards     #-}
 
 
 module Main (
+-- * Main entry.
   main
 ) where
 

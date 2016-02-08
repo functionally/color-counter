@@ -1,3 +1,15 @@
+{-|
+Module      :  Vision.Image.Color.Detection
+Copyright   :  (c) 2016 Brian W Bush
+License     :  MIT
+Maintainer  :  Brian W Bush <consult@brianwbush.info>
+Stability   :  Stable
+Portability :  Portable
+
+Color detection.
+-}
+
+
 {-# LANGUAGE DeriveGeneric    #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RecordWildCards  #-}
@@ -6,12 +18,14 @@
 
 
 module Vision.Image.Color.Detection (
+-- * Configuration
   ColorConfiguration(..)
 , ColorSpecification(..)
-, NormalizedConfiguration
-, NormalizedSpecification
-, normalizeConfiguration
-, normalizeSpecification
+, OptimizedConfiguration
+, OptimizedSpecification
+, optimizeConfiguration
+, optimizeSpecification
+-- * Classification
 , classify
 , measure
 , quantize
@@ -42,11 +56,12 @@ import qualified Data.Vector.Storable as V (toList)
 import qualified Vision.Image.Class as I (map)
 
 
+-- | Configuration for color detection.
 data ColorConfiguration a =
   ColorConfiguration
   {
-    colorSpecifications  :: [ColorSpecification a]
-  , svgDefault           :: String
+    colorSpecifications  :: [ColorSpecification a] -- ^ Specification of colors.
+  , svgDefault           :: String                 -- ^ Default color.
   }
     deriving (Eq, Generic, Ord, Read, Show)
 
@@ -68,31 +83,36 @@ instance Num a => Default (ColorConfiguration a) where
       "gray"
 
 
-data NormalizedConfiguration a =
-  NormalizedConfiguration
+-- | An optimized version of a configuration for color detection.
+data OptimizedConfiguration a =
+  OptimizedConfiguration
   {
-    normalizedSpecifications :: [NormalizedSpecification a]
-  , normalizedDefault        :: (String, RGBPixel)
+    optimizedSpecifications :: [OptimizedSpecification a] -- ^ Optimized versions of the specifications.
+  , optimizedDefault        :: (String, RGBPixel)          -- ^ Optimized version of the default color.
   }
 
 
-normalizeConfiguration :: (InnerSpace a, Floating (Scalar a)) => ColorConfiguration a -> NormalizedConfiguration a
-normalizeConfiguration ColorConfiguration{..} =
-  NormalizedConfiguration
+-- | Optimize a configuration fo color detection.
+optimizeConfiguration :: (InnerSpace a, Floating (Scalar a))
+                       => ColorConfiguration a      -- ^ The configuration.
+                       -> OptimizedConfiguration a  -- ^ An optimized version of the configuration.
+optimizeConfiguration ColorConfiguration{..} =
+  OptimizedConfiguration
     {
-      normalizedSpecifications = map normalizeSpecification colorSpecifications
-    , normalizedDefault        = normalizeColor svgDefault
+      optimizedSpecifications = map optimizeSpecification colorSpecifications
+    , optimizedDefault        = optimizeColor svgDefault
     }
 
 
+-- | Specification for detecting a color.
 data ColorSpecification a =
   ColorSpecification
   {
-    svgColor       :: String
-  , labVertex     :: (a, a, a)
-  , labDirection  :: (a, a, a)
-  , labThreshold  :: a
-  , efficiency    :: a
+    svgColor       :: String   -- ^ The color.
+  , labVertex     :: (a, a, a) -- ^ A CIE-LAB point on the separating plane.
+  , labDirection  :: (a, a, a) -- ^ A CIE-LAB direction pointing into the half plane.
+  , labThreshold  :: a         -- ^ The distance beyond which the color is detected in the half plane.
+  , efficiency    :: a         -- ^ The detection efficiency.
   }
     deriving (Eq, Generic, Ord, Read, Show)
 
@@ -102,29 +122,35 @@ instance (ToJSON a, Generic a) => ToJSON (ColorSpecification a) where
   toJSON = genericToJSON defaultOptions
 
 
-data NormalizedSpecification a =
-  NormalizedSpecification
+-- An optimized version of a specification for detecting a color.
+data OptimizedSpecification a =
+  OptimizedSpecification
   {
-    normalizedColor      :: (String, RGBPixel)
-  , normalizedVertex     :: (a, a, a)
-  , normalizedDirection  :: (a, a, a)
-  , normalizedThreshold  :: a
+    optimizedColor      :: (String, RGBPixel) -- ^ The color.
+  , optimizedVertex     :: (a, a, a)          -- ^ A CIE-LAB point on the separating plane.
+  , optimizedDirection  :: (a, a, a)          -- ^ A CIE-LAB direction pointing into the half plane.
+  , optimizedThreshold  :: a                  -- ^ The distance beyond which the color is detected in the half plane.
   }
 
 
-normalizeSpecification :: (InnerSpace a, Floating (Scalar a)) => ColorSpecification a -> NormalizedSpecification a
-normalizeSpecification ColorSpecification{..} =
-  NormalizedSpecification
+-- | Optimize a specification for detecting a color.
+optimizeSpecification :: (InnerSpace a, Floating (Scalar a))
+                      => ColorSpecification a     -- ^ The specification.
+                      -> OptimizedSpecification a -- ^ An optimized version of the specification.
+optimizeSpecification ColorSpecification{..} =
+  OptimizedSpecification
     {
-      normalizedColor     = normalizeColor svgColor
-    , normalizedVertex    = labVertex
-    , normalizedDirection = normalized labDirection
-    , normalizedThreshold = labThreshold
+      optimizedColor     = optimizeColor svgColor
+    , optimizedVertex    = labVertex
+    , optimizedDirection = normalized labDirection
+    , optimizedThreshold = labThreshold
     }
 
 
-normalizeColor :: String -> (String, RGBPixel)
-normalizeColor =
+-- | Optimize the representation of a color.
+optimizeColor :: String             -- ^ The name of the color.
+              -> (String, RGBPixel) -- ^ The name of the color and its RGB representation.
+optimizeColor =
   ap (,)
     $ uncurryRGB RGBPixel
     . toSRGB24
@@ -132,31 +158,45 @@ normalizeColor =
     . (readColourName :: String -> Maybe (Colour Double))
 
 
-quantize :: (AffineSpace a, InnerSpace a, RealFloat a, a ~ Scalar (a, a, a), a ~ Diff a) => ColorConfiguration a -> RGB -> RGB
+-- | Replace the colors in an image with the colors detected there.
+quantize :: (AffineSpace a, InnerSpace a, RealFloat a, a ~ Scalar (a, a, a), a ~ Diff a)
+         => ColorConfiguration a -- ^ The configuration for detecting the colors.
+         -> RGB                  -- ^ The original image.
+         -> RGB                  -- ^ The recolored image.
 quantize colorConfiguration =
   I.map
     $ snd
     . snd
-    . classify (normalizeConfiguration colorConfiguration)
+    . classify (optimizeConfiguration colorConfiguration)
 
 
-pixels :: RGB -> [RGBPixel]
+-- | Retrieve the pixels in an image.
+pixels :: RGB        -- ^ The image.
+       -> [RGBPixel] -- ^ The pixels.
 pixels = V.toList . manifestVector
 
 
-analyze :: (AffineSpace a, InnerSpace a, RealFloat a, a ~ Scalar (a, a, a), a ~ Diff a) => ColorConfiguration a -> RGB -> [(RGBPixel, (a, a, a), String)]
+-- | List the colors and their detection in an image.
+analyze :: (AffineSpace a, InnerSpace a, RealFloat a, a ~ Scalar (a, a, a), a ~ Diff a)
+        => ColorConfiguration a            -- ^ The configuration for detecting the colors.
+        -> RGB                             -- ^ The image.
+        -> [(RGBPixel, (a, a, a), String)] -- ^ The RGB value, CIE-LAB value, and detected color for the pixels in the image.
 analyze colorConfiguration image =
   [
     (p, lab, color)
   |
     p <- pixels image
-  , let (lab, (color, _)) = classify normalizedConfiguration p
+  , let (lab, (color, _)) = classify optimizedConfiguration p
   ]
     where
-      normalizedConfiguration = normalizeConfiguration colorConfiguration
+      optimizedConfiguration = optimizeConfiguration colorConfiguration
 
 
-tally :: (AffineSpace a, InnerSpace a, RealFloat a, a ~ Scalar (a, a, a), a ~ Diff a) => ColorConfiguration a -> RGB -> [(String, Int)]
+-- | Tally the colors detected in an image.
+tally :: (AffineSpace a, InnerSpace a, RealFloat a, a ~ Scalar (a, a, a), a ~ Diff a)
+      => ColorConfiguration a -- ^ The configuration for detecting the colors.
+      -> RGB                  -- ^ The image.
+      -> [(String, Int)]      -- ^ The detected colors and the number of times they occur in the image.
 tally colorConfiguration@ColorConfiguration{..} =
   let
     zero = M.fromList $ map (, 0) $ (svgDefault :) $ map svgColor colorSpecifications
@@ -171,68 +211,41 @@ tally colorConfiguration@ColorConfiguration{..} =
       . analyze colorConfiguration
 
 
-effectiveTally :: (AffineSpace a, InnerSpace a, RealFloat a, a ~ Scalar (a, a, a), a ~ Diff a) => ColorConfiguration a -> RGB -> [(String, a)]
+-- | Tally the colors detected in an image, including correction for detection efficiency.
+effectiveTally :: (AffineSpace a, InnerSpace a, RealFloat a, a ~ Scalar (a, a, a), a ~ Diff a)
+               => ColorConfiguration a -- ^ The configuration for detecting the colors.
+               -> RGB                  -- ^ The image.
+               -> [(String, a)]        -- ^ The detected colors and the number of times they occur in the image.
 effectiveTally colorConfiguration@ColorConfiguration{..} =
   zipWith (\ColorSpecification{..} (color, count) -> (color, fromIntegral count / efficiency)) colorSpecifications
     . tally colorConfiguration
     
 
-
-classify :: (AffineSpace a, InnerSpace a, RealFloat a, a ~ Scalar (a, a, a), a ~ Diff a) => NormalizedConfiguration a -> RGBPixel -> ((a, a, a), (String, RGBPixel))
-classify NormalizedConfiguration{..} RGBPixel{..} =
+-- | Detect the color of a pixel.
+classify :: (AffineSpace a, InnerSpace a, RealFloat a, a ~ Scalar (a, a, a), a ~ Diff a)
+         => OptimizedConfiguration a        -- ^ The configuration for detecting the colors.
+         -> RGBPixel                        -- ^ The pixel.
+         -> ((a, a, a), (String, RGBPixel)) -- ^ The CIE-LAB value, the detected color, and the pixel.
+classify OptimizedConfiguration{..} RGBPixel{..} =
   let
     lab = cieLABView d65 $ sRGB24 rgbRed rgbGreen rgbBlue
   in
     (lab, )
       $ snd
       $ maximumBy (compare `on` fst)
-      $ (++ [(-100000, normalizedDefault)])
-      $ mapMaybe (measure lab) normalizedSpecifications
+      $ (++ [(-100000, optimizedDefault)])
+      $ mapMaybe (measure lab) optimizedSpecifications
 
 
-measure :: (AffineSpace a, InnerSpace a, Ord a, a ~ Scalar (a, a, a), a ~ Diff a) => (a, a, a) -> NormalizedSpecification a -> Maybe (a, (String, RGBPixel))
-measure lab NormalizedSpecification{..} =
+-- | Measure the distance of a pixel into a half plan for a color.
+measure :: (AffineSpace a, InnerSpace a, Ord a, a ~ Scalar (a, a, a), a ~ Diff a)
+        => (a, a, a)                     -- ^ The pixel's CIE-LAB value.
+        -> OptimizedSpecification a      -- ^ The specification for the color.
+        -> Maybe (a, (String, RGBPixel)) -- ^ The distance into the half plane, the color, and its pixel representation.
+measure lab OptimizedSpecification{..} =
   let
-    distance = (lab .-. normalizedVertex) <.> normalizedDirection
+    distance = (lab .-. optimizedVertex) <.> optimizedDirection
   in
-    if distance > normalizedThreshold
-      then Just (distance, normalizedColor)
+    if distance > optimizedThreshold
+      then Just (distance, optimizedColor)
       else Nothing
-
-
-{- ORIGINAL VERSION:
-classify :: RGBPixel -> Classification
-classify RGBPixel{..} =
-  let
-    normalize (a, b) =
-      (a' / n, b' / n)
-        where
-          a' = a - a0
-          b' = b - b0
-          n = sqrt $ a' * a' + b' * b'
-    (a0, b0) = (0, 5)
-    green0  = normalize (-50,  30)
-    yellow0 = normalize (  0,  80)
-    blue0   = normalize ( 10, -50)
-    red0    = normalize ( 70,  50)
-    (l, a, b) = cieLABView d65 $ sRGB24 rgbRed rgbGreen rgbBlue :: (Double, Double, Double)
-    a' = a - a0
-    b' = b - b0
-    test (a'', b'') = a' * a'' + b' * b''
-    x@[green, yellow, blue, red] = map test [green0, yellow0, blue0, red0]
-    best = maximum x
-  in
-    if best < 15
-      then if l < 25
-        then Black
-        else Gray
-      else if green == best
-        then Green
-        else if yellow == best
-          then Yellow
-          else if blue == best
-            then Blue
-            else if red == best
-              then Red
-              else Gray
--}
