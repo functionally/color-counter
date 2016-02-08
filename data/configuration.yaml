@@ -1,0 +1,57 @@
+colorSpecifications:
+- svgColor: green
+  labVertex:
+  - 0
+  - 0
+  - 5
+  labDirection:
+  - 0
+  - -50
+  - 25
+  labThreshold: 15
+  efficiency: 1
+- svgColor: yellow
+  labVertex:
+  - 0
+  - 0
+  - 5
+  labDirection:
+  - 0
+  - 0
+  - 75
+  labThreshold: 15
+  efficiency: 1
+- svgColor: blue
+  labVertex:
+  - 0
+  - 0
+  - 5
+  labDirection:
+  - 0
+  - 10
+  - -55
+  labThreshold: 15
+  efficiency: 1
+- svgColor: red
+  labVertex:
+  - 0
+  - 0
+  - 5
+  labDirection:
+  - 0
+  - 70
+  - 45
+  labThreshold: 15
+  efficiency: 1
+- svgColor: black
+  labVertex:
+  - 25
+  - 0
+  - 0
+  labDirection:
+  - -1
+  - 0
+  - 0
+  labThreshold: 0
+  efficiency: 1
+svgDefault: gray

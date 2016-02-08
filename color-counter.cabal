@@ -1,0 +1,65 @@
+name:                color-counter
+version:             0.1.0.0
+synopsis:            Color Counter
+description:         Tool for counting colors in an image.
+
+license:             MIT
+license-file:        LICENSE
+author:              Brian W Bush <consult@brianwbush.info>
+maintainer:          Brian W Bush <consult@brianwbush.info>
+copyright:           (c) 2016 Brian W Bush
+category:            Graphics
+build-type:          Simple
+cabal-version:       >= 1.10
+homepage:            https://bitbucket.org/bwbush/color-counter
+bug-reports:         https://bwbush.atlassian.net/projects/HCC/issues/
+package-url:         https://bitbucket.org/bwbush/infovis-parallel/downloads/color-counter-0.1.0.0.tar.gz
+
+extra-source-files:  ReadMe.md
+
+source-repository head
+  type: git
+  location: https://bwbush@bitbucket.org/bwbush/color-counter.git
+ 
+library
+  build-depends:       base >= 4.8 && < 5
+               ,       aeson
+               ,       colour
+               ,       containers
+               ,       data-default
+               ,       directory
+               ,       friday
+               ,       friday-devil
+               ,       split
+               ,       v4l2
+               ,       vector
+               ,       vector-space
+               ,       yaml
+  exposed-modules:     Vision.Image.Color.Detection
+                       Vision.Image.IO
+                       Vision.Image.IO.Capture
+  hs-source-dirs:      src
+  exposed:          True
+  buildable:        True
+  ghc-options:      -threaded -Wall
+  default-language: Haskell2010
+
+executable color-counter
+  main-is:             Main.hs
+  build-depends:       base
+               ,       aeson
+               ,       colour
+               ,       cmdargs
+               ,       containers
+               ,       data-default
+               ,       directory
+               ,       friday
+               ,       friday-devil
+               ,       split
+               ,       v4l2
+               ,       vector
+               ,       vector-space
+               ,       yaml
+  hs-source-dirs:      src
+  default-language:    Haskell2010
+  ghc-options:         -Wall
