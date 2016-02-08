@@ -1,5 +1,5 @@
 name:                color-counter
-version:             0.1.0.1
+version:             0.1.0.2
 synopsis:            Color Counter
 description:         Tool for counting colors in an image.
 
@@ -13,9 +13,13 @@ build-type:          Simple
 cabal-version:       >= 1.10
 homepage:            https://bitbucket.org/bwbush/color-counter
 bug-reports:         https://bwbush.atlassian.net/projects/HCC/issues/
-package-url:         https://bitbucket.org/bwbush/infovis-parallel/downloads/color-counter-0.1.0.0.tar.gz
+package-url:         https://bitbucket.org/bwbush/infovis-parallel/downloads/color-counter-0.1.0.2.tar.gz
 
 extra-source-files:  ReadMe.md
+data-dir: data
+data-files: configuration.yaml
+            sample.jpg
+            samples.tar.bz2
 
 source-repository head
   type: git
