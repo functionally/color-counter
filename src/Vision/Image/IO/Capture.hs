@@ -32,7 +32,7 @@ captureRGB :: FilePath -- ^ The device name.
 captureRGB deviceName =
   do
     withDevice deviceName $ \device -> do
-      format <- setFormat device Capture . (\format -> format {imagePixelFormat = PixelRGB24}) =<< getFormat device Capture
+      format <- setFormat device Capture . (\format -> format {imagePixelFormat = PixelRGB24, imageWidth = 352, imageHeight = 288}) =<< getFormat device Capture
       let
         w = imageWidth format
         h = imageHeight format
