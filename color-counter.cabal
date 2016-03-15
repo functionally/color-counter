@@ -1,5 +1,5 @@
 name:                color-counter
-version:             0.1.0.2
+version:             0.1.0.3
 synopsis:            Color Counter
 description:         Tool for counting colors in an image.
 

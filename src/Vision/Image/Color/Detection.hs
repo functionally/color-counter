@@ -212,12 +212,13 @@ tally colorConfiguration@ColorConfiguration{..} =
 
 
 -- | Tally the colors detected in an image, including correction for detection efficiency.
-effectiveTally :: (AffineSpace a, InnerSpace a, RealFloat a, a ~ Scalar (a, a, a), a ~ Diff a)
+effectiveTally :: (Show a, AffineSpace a, InnerSpace a, RealFloat a, a ~ Scalar (a, a, a), a ~ Diff a)
                => ColorConfiguration a -- ^ The configuration for detecting the colors.
                -> RGB                  -- ^ The image.
                -> [(String, a)]        -- ^ The detected colors and the number of times they occur in the image.
 effectiveTally colorConfiguration@ColorConfiguration{..} =
   zipWith (\ColorSpecification{..} (color, count) -> (color, fromIntegral count / efficiency)) colorSpecifications
+    . filter ((/= svgDefault) . fst)
     . tally colorConfiguration
     
 
