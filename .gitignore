@@ -4,7 +4,4 @@ tmp/
 cabal.sandbox.config
 .cabal-sandbox/
 dist/
-R/.RData
-R/.Rhistory
-R/.Rproj.user/
 samples/

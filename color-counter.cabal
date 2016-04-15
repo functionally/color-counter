@@ -19,7 +19,6 @@ extra-source-files:  ReadMe.md
 data-dir: data
 data-files: configuration.yaml
             sample.jpg
-            samples.tar.bz2
 
 source-repository head
   type: git
