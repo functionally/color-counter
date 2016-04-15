@@ -18,14 +18,18 @@ module Vision.Image.IO (
 
 
 import Control.Monad (when)
+import Data.Maybe (fromMaybe)
 import System.Directory (doesFileExist, removeFile)
 import Vision.Image (RGB)
+import Vision.Image.Type (manifestSize)
 import Vision.Image.Storage.DevIL (Autodetect(..), StorageError, load, save)
+import Vision.Image.Transform (InterpolMethod(TruncateInteger), resize)
+import Vision.Primitive.Shape -- (Z, (:.), ix2)
 
 
 -- | Read an image from a file.
-readRGB :: FilePath -- ^ The path to the file.
-        -> IO RGB   -- ^ An action for reading the image as RGB.
+readRGB :: FilePath  -- ^ The path to the file.
+        -> IO RGB    -- ^ An action for reading the image as RGB.
 readRGB path =
   do
     image <- load Autodetect path :: IO (Either StorageError RGB)
@@ -33,14 +37,21 @@ readRGB path =
 
 
 -- | Write an image to a file.
-writeRGB :: Bool     -- ^ Whether to overwrite the file if it already exists.
-         -> FilePath -- ^ The path to the file.
-         -> RGB      -- ^ The image.
-         -> IO ()    -- ^ An action to write the image.
-writeRGB overwrite path image =
+writeRGB :: Bool      -- ^ Whether to overwrite the file if it already exists.
+         -> Maybe Int -- ^ The width for the output image.
+         -> Maybe Int -- ^ The height for the output image.
+         -> FilePath  -- ^ The path to the file.
+         -> RGB       -- ^ The image.
+         -> IO ()     -- ^ An action to write the image.
+writeRGB overwrite width height path image =
   do
     exists <- doesFileExist path
+    let
+      size' = manifestSize image
+      Z :. height' :. width' = size'
+      size = fromMaybe height' height `ix2` fromMaybe width' width
+      image' = if size == size' then image else resize TruncateInteger size image
     when (overwrite && exists)
       $ removeFile path
-    status <- save Autodetect path image
+    status <- save Autodetect path image'
     maybe (return ()) (error . show) status

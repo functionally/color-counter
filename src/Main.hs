@@ -21,7 +21,7 @@ module Main (
 ) where
 
 
-import Control.Monad (when)
+import Control.Monad (unless)
 import Data.Data (Data)
 import Data.Typeable (Typeable)
 import Data.Version (showVersion)
@@ -75,6 +75,8 @@ data Imager =
     , analyze       :: FilePath
     , tally         :: FilePath
     , quantize      :: FilePath
+    , width         :: Maybe Int
+    , height        :: Maybe Int
     }
   | Defaults
     {
@@ -85,6 +87,8 @@ data Imager =
     {
       input         :: FilePath
     , output        :: FilePath
+    , width         :: Maybe Int
+    , height        :: Maybe Int
     }
 #endif
     deriving (Data, Show, Typeable)
@@ -117,6 +121,10 @@ process =
   , quantize       = def
                   &= typFile
                   &= help "image file with quantized colors"
+  , width          = def
+                  &= help "width of output image"
+  , height         = def
+                  &= help "height of output image"
   }
     &= name "process"
     &= help "Process an image."
@@ -149,6 +157,10 @@ capture =
   , output         = def
                   &= typ "OUTPUT_IMAGE"
                   &= argPos 1
+  , width          = def
+                  &= help "width of output image"  -- FIXME: This does not appear in the help message.
+  , height         = def
+                  &= help "height of output image"  -- FIXME: This does not appear in the help message.
   }
     &= name "capture"
     &= help "Capture an image from a device."
@@ -164,36 +176,35 @@ dispatch Process{..} =
     image <-
 #ifdef CAPTURE
       if device
-        then captureRGB input
+        then captureRGB input width height
         else readRGB input
 #else
       readRGB input
 #endif
-    when (not $ null analyze)
+    unless (null analyze)
       $ writeFile analyze
       $ unlines
       $ (("Red" +++ "Green" +++ "Blue" +++ "L" +++ "A" +++ "B" +++ "Color") :)
       $ map (\(RGBPixel{..}, (l, a, b), color) -> show rgbRed +++ show rgbGreen +++ show rgbBlue +++ show l +++ show a +++ show b +++ color)
       $ C.analyze configuration' image
-    when (not $ null tally)
+    unless (null tally)
       $ writeFile tally
       $ unlines
       $ (("Color" +++ "Pixels") :)
       $ map (\(color, count) -> color +++ show count)
       $ C.effectiveTally configuration' image
-    when (not $ null quantize)
-      $ writeRGB True quantize
+    unless (null quantize)
+      $ writeRGB True width height quantize
       $ C.quantize configuration' image
 
 dispatch Defaults{..} =
-  do
-    encodeFile configuration $ (D.def :: C.ColorConfiguration Double)
+  encodeFile configuration (D.def :: C.ColorConfiguration Double)
 
 #ifdef CAPTURE
 dispatch Capture{..} =
   do
-    image <- captureRGB input
-    writeRGB True output image
+    image <- captureRGB input width height
+    writeRGB True width height output image
 #endif
 
 
