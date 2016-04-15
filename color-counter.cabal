@@ -1,5 +1,5 @@
 name:                color-counter
-version:             0.1.0.4
+version:             0.1.1.0
 synopsis:            Color Counter
 description:         Tool for counting colors in an image.
 
@@ -24,7 +24,11 @@ data-files: configuration.yaml
 source-repository head
   type: git
   location: https://bwbush@bitbucket.org/bwbush/color-counter.git
- 
+
+flag nocapture
+  description: Compile without support for image capture.  (Capture support requires the "v4l2" package which is only available on Linux.) 
+  default: False
+
 library
   build-depends:       base >= 4.8 && < 5
                ,       aeson
@@ -35,18 +39,20 @@ library
                ,       friday
                ,       friday-devil
                ,       split
-               ,       v4l2
                ,       vector
                ,       vector-space
                ,       yaml
   exposed-modules:     Vision.Image.Color.Detection
                        Vision.Image.IO
-                       Vision.Image.IO.Capture
   hs-source-dirs:      src
   exposed:          True
   buildable:        True
   ghc-options:      -threaded -Wall
   default-language: Haskell2010
+  if !flag(nocapture) && os(linux)
+     cpp-options: -DCAPTURE
+     build-depends: v4l2
+     exposed-modules: Vision.Image.IO.Capture
 
 executable color-counter
   main-is:             Main.hs
@@ -60,10 +66,12 @@ executable color-counter
                ,       friday
                ,       friday-devil
                ,       split
-               ,       v4l2
                ,       vector
                ,       vector-space
                ,       yaml
   hs-source-dirs:      src
   default-language:    Haskell2010
   ghc-options:         -Wall
+  if !flag(nocapture) && os(linux)
+     cpp-options: -DCAPTURE
+     build-depends: v4l2

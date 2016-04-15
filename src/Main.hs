@@ -10,6 +10,7 @@ Main entry.
 -}
 
 
+{-# LANGUAGE CPP                 #-}
 {-# LANGUAGE DeriveDataTypeable  #-}
 {-# LANGUAGE RecordWildCards     #-}
 
@@ -29,7 +30,9 @@ import Paths_color_counter (version)
 import System.Console.CmdArgs ((&=), argPos, auto, cmdArgs, def, details, help, modes, name, opt, program, summary, typ, typFile)
 import Vision.Image (RGBPixel(..))
 import Vision.Image.IO (readRGB, writeRGB)
+#ifdef CAPTURE
 import Vision.Image.IO.Capture (captureRGB)
+#endif
 
 import qualified Data.Default as D (def)
 import qualified Vision.Image.Color.Detection as C (ColorConfiguration, analyze, quantize, effectiveTally)
@@ -52,7 +55,9 @@ imager =
     [
       process
     , defaults
+#ifdef CAPTURE
     , capture
+#endif
     ]
       &= program "color-counter"
       &= summary ("Color Counter, Version " ++ stringVersion)
@@ -64,7 +69,9 @@ data Imager =
     {
       configuration :: FilePath
     , input         :: FilePath
+#ifdef CAPTURE
     , device        :: Bool
+#endif
     , analyze       :: FilePath
     , tally         :: FilePath
     , quantize      :: FilePath
@@ -73,11 +80,13 @@ data Imager =
     {
       configuration :: FilePath
     }
+#ifdef CAPTURE
   | Capture
     {
       input         :: FilePath
     , output        :: FilePath
     }
+#endif
     deriving (Data, Show, Typeable)
 
 
@@ -92,9 +101,11 @@ process =
                   &= opt "/dev/stdin"
                   &= typ "INPUT_IMAGE"
                   &= argPos 0
+#ifdef CAPTURE
   , device         = def
                   &= typ "BOOLEAN"
                   &= help "the input is a Video for Linux device instead of a file"
+#endif
   , analyze        = def
                   &= opt "/dev/stdout"
                   &= typFile
@@ -127,6 +138,7 @@ defaults =
     &= details ["The default configuration file is written in YAML format.  SVG names are used to specify colors.  The 'svgDefault' field specifies the color to be used when no color is detected.  Each of the entries in 'colorSpecifications' specifies how to detect the color given by 'svgColor'.  The 'labVertex' and 'labDirection' fields specify a half plane in CIE LAB color space.  The given color is considered to be detected with probability 'efficiency' if its distance into the half plane is at least 'labThreshold'."]
 
 
+#ifdef CAPTURE
 capture :: Imager
 capture =
   Capture
@@ -141,6 +153,7 @@ capture =
     &= name "capture"
     &= help "Capture an image from a device."
     &= details ["The input must be a Video for Linux devices such as /dev/video0.  The file extension for the output must be that of a common format like PNG."]
+#endif
 
 
 dispatch :: Imager -> IO ()
@@ -149,9 +162,13 @@ dispatch Process{..} =
   do
     Just configuration' <- if null configuration then return (Just D.def) else decodeFile configuration :: IO (Maybe (C.ColorConfiguration Double))
     image <-
+#ifdef CAPTURE
       if device
         then captureRGB input
         else readRGB input
+#else
+      readRGB input
+#endif
     when (not $ null analyze)
       $ writeFile analyze
       $ unlines
@@ -172,10 +189,12 @@ dispatch Defaults{..} =
   do
     encodeFile configuration $ (D.def :: C.ColorConfiguration Double)
 
+#ifdef CAPTURE
 dispatch Capture{..} =
   do
     image <- captureRGB input
     writeRGB True output image
+#endif
 
 
 infixr 5 +++
