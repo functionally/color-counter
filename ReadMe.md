@@ -18,7 +18,7 @@ In this example we use [blank colored dice](http://www.amazon.com/dp/B00BNWGVDO)
 We can process this file using the command-line tool:
 
 ```bash
-  color-counter --analyze=analysis.tsv --tally=tallies.tsv --quantize=data/quantized.png data/sample.jpg
+  color-counter --analyze=analysis.tsv --tally=tallies.tsv --quantize=quantized.png data/sample.jpg
 ```
 
 The tally of pixels is as follows:
@@ -33,7 +33,7 @@ The tally of pixels is as follows:
 
 One can see that edge and shading effects cause the detection efficiency to vary by color.  The following image shows where colors are detected:
 
-![colors detected](R/analysis.png)
+![colors detected](R/quantized.png)
 
 Some simple R code can be used to look at the observed pixels in CIE-LAB space, and then compare that to the classification of those pixels:
 
