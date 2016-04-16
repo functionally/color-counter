@@ -10,6 +10,9 @@ Image input/output.
 -}
 
 
+{-# LANGUAGE TypeOperators #-}
+
+
 module Vision.Image.IO (
 -- * Input/output
   readRGB
@@ -24,7 +27,7 @@ import Vision.Image (RGB)
 import Vision.Image.Type (manifestSize)
 import Vision.Image.Storage.DevIL (Autodetect(..), StorageError, load, save)
 import Vision.Image.Transform (InterpolMethod(TruncateInteger), resize)
-import Vision.Primitive.Shape -- (Z, (:.), ix2)
+import Vision.Primitive.Shape (Z(..), (:.)(..), ix2)
 
 
 -- | Read an image from a file.
