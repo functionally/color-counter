@@ -3,7 +3,52 @@ Count colors in images
 
 This Haskell package contains functions for counting colors in images, either from a file or a camera feed.  The input image must in a standard format like JPEG or PNG.  The analyze function outputs the RGB and CIE-LAB values for each pixel, along with the color detected there.  The tally function outputs a histogram of the colors detected.  The quantize function outputs an image where the pixels have been replaced by the colors detected there.
 
+A command-line tool for detecting and tallying colors is also provided.
+
 Please report issues at <<https://bwbush.atlassian.net/projects/HCC/issues/>>.
+
+
+Example
+-------
+
+In this example we use [blank colored dice](http://www.amazon.com/dp/B00BNWGVDO) on a gray felt background:
+
+![example input](data/sample.jpg)
+
+We can process this file using the command-line tool:
+
+```bash
+  color-counter --analyze=analysis.tsv --tally=tallies.tsv --quantize=data/quantized.png data/sample.jpg
+```
+
+The tally of pixels is as follows:
+
+| Color  | Pixels | Efficiency [pixels/cube] |
+|--------|--------|-------------------------:|
+| black  | 3222   |                   128.88 |
+| blue   | 3285   |                   131.40 |
+| green  | 3972   |                   154.88 |
+| red    | 3738   |                   149.52 |
+| yellow | 4156   |                   166.24 |
+
+One can see that edge and shading effects cause the detection efficiency to vary by color.  The following image shows where colors are detected:
+
+![colors detected](R/analysis.png)
+
+Some simple R code can be used to look at the observed pixels in CIE-LAB space, and then compare that to the classification of those pixels:
+
+```R
+require(data.table)
+analysis <- fread("analysis.tsv")
+analysis[, RGB:=rgb(Red/255,Green/255,Blue/255)]
+pairs(analysis[, .(L, A, B)], col=analysis$RGB, pch=".", main="Observations")
+pairs(analysis[, .(L, A, B)], col=analysis$Color, pch=".", main="Classifications")
+```
+
+![observations](R/observations.png)
+
+![classifications](R/classifications.png)
+
 
 
 Calibration
@@ -16,8 +61,8 @@ The `ColorSpecification` entries define the color being detected and a half plan
 Because the detection efficiency varies somewhat by color, an efficiency parameter is included in `ColorSpecification`.
 
 
-Skeletal example illustrating the tallying of colors in an image
-----------------------------------------------------------------
+Skeletal example code illustrating the tallying of colors in an image
+---------------------------------------------------------------------
 
 ```haskell
 main :: IO ()
