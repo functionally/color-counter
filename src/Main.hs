@@ -176,7 +176,7 @@ dispatch Process{..} =
     image <-
 #ifdef CAPTURE
       if device
-        then captureRGB input width height
+        then captureRGB input (width, height)
         else readRGB input
 #else
       readRGB input
@@ -194,7 +194,7 @@ dispatch Process{..} =
       $ map (\(color, count) -> color +++ show count)
       $ C.effectiveTally configuration' image
     unless (null quantize)
-      $ writeRGB True width height quantize
+      $ writeRGB True (width, height) quantize
       $ C.quantize configuration' image
 
 dispatch Defaults{..} =
@@ -203,8 +203,8 @@ dispatch Defaults{..} =
 #ifdef CAPTURE
 dispatch Capture{..} =
   do
-    image <- captureRGB input width height
-    writeRGB True width height output image
+    image <- captureRGB input (width, height)
+    writeRGB True (width, height) output image
 #endif
 
 

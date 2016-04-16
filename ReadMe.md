@@ -33,7 +33,7 @@ The tally of pixels is as follows:
 
 One can see that edge and shading effects cause the detection efficiency to vary by color.  The following image shows where colors are detected:
 
-![colors detected](R/quantized.png)
+![colors detected](data/R/quantized.png)
 
 Some simple R code can be used to look at the observed pixels in CIE-LAB space, and then compare that to the classification of those pixels:
 
@@ -45,9 +45,9 @@ pairs(analysis[, .(L, A, B)], col=analysis$RGB, pch=".", main="Observations")
 pairs(analysis[, .(L, A, B)], col=analysis$Color, pch=".", main="Classifications")
 ```
 
-![observations](R/observations.png)
+![observations](data/R/observations.png)
 
-![classifications](R/classifications.png)
+![classifications](data/R/classifications.png)
 
 
 
@@ -70,5 +70,5 @@ main = do
   input <- readRGB "data/sample.jpg"
   print $ tally def input
   let output = quantize def input
-  writeRBG True Nothing Nothing "analysis.png" output
+  writeRBG True (Nothing, Nothing) "analysis.png" output
 ```

@@ -40,13 +40,12 @@ readRGB path =
 
 
 -- | Write an image to a file.
-writeRGB :: Bool      -- ^ Whether to overwrite the file if it already exists.
-         -> Maybe Int -- ^ The width for the output image.
-         -> Maybe Int -- ^ The height for the output image.
-         -> FilePath  -- ^ The path to the file.
-         -> RGB       -- ^ The image.
-         -> IO ()     -- ^ An action to write the image.
-writeRGB overwrite width height path image =
+writeRGB :: Bool                   -- ^ Whether to overwrite the file if it already exists.
+         -> (Maybe Int, Maybe Int) -- ^ The width and height for the output image.
+         -> FilePath               -- ^ The path to the file.
+         -> RGB                    -- ^ The image.
+         -> IO ()                  -- ^ An action to write the image.
+writeRGB overwrite (width, height) path image =
   do
     exists <- doesFileExist path
     let

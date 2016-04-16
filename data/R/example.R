@@ -1,8 +1,8 @@
 require(data.table)
 
-system("../.cabal-sandbox/bin/color-counter --analyze=analysis.tsv --tally=tallies.tsv --quantize=quantized.png ../data/sample.jpg")
+system("../../.cabal-sandbox/bin/color-counter --analyze=analysis.tsv --tally=tallies.tsv --quantize=quantized.png ../sample.jpg")
 
-analysis <- fread("../analysis.tsv")
+analysis <- fread("analysis.tsv")
 
 analysis[, RGB:=rgb(Red/255,Green/255,Blue/255)]
 

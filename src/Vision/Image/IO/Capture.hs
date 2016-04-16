@@ -31,11 +31,10 @@ import qualified Data.Vector.Storable as V (fromList)
 
 
 -- | Capture an image from a Video for Linux device.
-captureRGB :: FilePath  -- ^ The device name.
-           -> Maybe Int -- ^ The width for the output image.
-           -> Maybe Int -- ^ The height for the output image.
-           -> IO RGB    -- ^ An action to capture one image frame.
-captureRGB deviceName width height =
+captureRGB :: FilePath               -- ^ The device name.
+           -> (Maybe Int, Maybe Int) -- ^ The width and height for the output image.
+           -> IO RGB                 -- ^ An action to capture one image frame.
+captureRGB deviceName (width, height) =
   withDevice deviceName $ \device -> do
     format <- setFormat device Capture . (\format@ImageFormat{..} -> format {imagePixelFormat = PixelRGB24, imageWidth = fromMaybe imageWidth width, imageHeight = fromMaybe imageHeight height}) =<< getFormat device Capture
     let
