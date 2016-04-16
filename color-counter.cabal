@@ -49,7 +49,7 @@ library
   hs-source-dirs:      src
   exposed:          True
   buildable:        True
-  ghc-options:      -threaded -Wall
+  ghc-options:      -Wall
   default-language: Haskell2010
   if !flag(nocapture) && os(linux)
      cpp-options: -DCAPTURE
