@@ -88,7 +88,7 @@ data OptimizedConfiguration a =
   OptimizedConfiguration
   {
     optimizedSpecifications :: [OptimizedSpecification a] -- ^ Optimized versions of the specifications.
-  , optimizedDefault        :: (String, RGBPixel)          -- ^ Optimized version of the default color.
+  , optimizedDefault        :: (String, RGBPixel)         -- ^ Optimized version of the default color.
   }
 
 
